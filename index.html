@@ -1237,6 +1237,30 @@
             header p {
                 font-size: 1rem;
             }
+            
+            /* Prevents grid layout items from expanding wider than viewport */
+            .contexto-grid > *,
+            .anovas-grid > *,
+            .conclusiones-grid > *,
+            .hipotesis-grid > *,
+            .ejecutivo-grid > *,
+            .comparativo-list > * {
+                min-width: 0;
+            }
+
+            /* Enable momentum horizontal scroll on mobile */
+            .table-container {
+                width: 100%;
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            th, td {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+
             .modal-content {
                 max-width: 95%;
                 max-height: 70vh;
