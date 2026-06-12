@@ -275,11 +275,18 @@
             align-self: flex-start;
         }
 
+        .matrix-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 10px 0;
+        }
+
         .latin-square {
             width: 100%;
             border-collapse: separate;
             border-spacing: 6px;
-            margin: 10px 0;
+            margin: 0;
         }
 
         .latin-square th,
@@ -1298,6 +1305,14 @@
                 width: 52px;
                 height: 52px;
                 border-radius: 6px;
+                white-space: normal !important;
+                word-wrap: break-word;
+                padding: 2px !important;
+            }
+            .latin-square tbody th {
+                width: 85px;
+                text-align: left;
+                padding-left: 6px !important;
             }
             .latin-square td .val {
                 font-size: 1.05rem;
@@ -1368,6 +1383,14 @@
                 width: 45px;
                 height: 45px;
                 border-radius: 4px;
+                white-space: normal !important;
+                word-wrap: break-word;
+                padding: 2px !important;
+            }
+            .latin-square tbody th {
+                width: 75px;
+                text-align: left;
+                padding-left: 4px !important;
             }
             .latin-square td .val {
                 font-size: 0.95rem;
@@ -1492,79 +1515,81 @@
 
                     <div class="matrix-container">
                         <div class="matrix-title">Matriz Experimental Interactiva (Hacer clic en las celdas)</div>
-                        <table class="latin-square">
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>Escala 1</th>
-                                    <th>Escala 2</th>
-                                    <th>Escala 3</th>
-                                    <th>Escala 4</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th>Inspector I</th>
-                                    <td data-row="I" data-col="1" data-trt="A" data-val="16">
-                                        <span class="val">16</span><span class="factor">A</span>
-                                    </td>
-                                    <td data-row="I" data-col="2" data-trt="B" data-val="10">
-                                        <span class="val">10</span><span class="factor">B</span>
-                                    </td>
-                                    <td data-row="I" data-col="3" data-trt="C" data-val="11">
-                                        <span class="val">11</span><span class="factor">C</span>
-                                    </td>
-                                    <td data-row="I" data-col="4" data-trt="D" data-val="13">
-                                        <span class="val">13</span><span class="factor">D</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Inspector II</th>
-                                    <td data-row="II" data-col="1" data-trt="B" data-val="15">
-                                        <span class="val">15</span><span class="factor">B</span>
-                                    </td>
-                                    <td data-row="II" data-col="2" data-trt="C" data-val="9">
-                                        <span class="val">9</span><span class="factor">C</span>
-                                    </td>
-                                    <td data-row="II" data-col="3" data-trt="D" data-val="14">
-                                        <span class="val">14</span><span class="factor">D</span>
-                                    </td>
-                                    <td data-row="II" data-col="4" data-trt="A" data-val="13">
-                                        <span class="val">13</span><span class="factor">A</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Inspector III</th>
-                                    <td data-row="III" data-col="1" data-trt="C" data-val="13">
-                                        <span class="val">13</span><span class="factor">C</span>
-                                    </td>
-                                    <td data-row="III" data-col="2" data-trt="D" data-val="12">
-                                        <span class="val">12</span><span class="factor">D</span>
-                                    </td>
-                                    <td data-row="III" data-col="3" data-trt="A" data-val="17">
-                                        <span class="val">17</span><span class="factor">A</span>
-                                    </td>
-                                    <td data-row="III" data-col="4" data-trt="B" data-val="14">
-                                        <span class="val">14</span><span class="factor">B</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Inspector IV</th>
-                                    <td data-row="IV" data-col="1" data-trt="D" data-val="16">
-                                        <span class="val">16</span><span class="factor">D</span>
-                                    </td>
-                                    <td data-row="IV" data-col="2" data-trt="A" data-val="15">
-                                        <span class="val">15</span><span class="factor">A</span>
-                                    </td>
-                                    <td data-row="IV" data-col="3" data-trt="B" data-val="13">
-                                        <span class="val">13</span><span class="factor">B</span>
-                                    </td>
-                                    <td data-row="IV" data-col="4" data-trt="C" data-val="11">
-                                        <span class="val">11</span><span class="factor">C</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="matrix-table-wrapper">
+                            <table class="latin-square">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Escala 1</th>
+                                        <th>Escala 2</th>
+                                        <th>Escala 3</th>
+                                        <th>Escala 4</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th>Inspector I</th>
+                                        <td data-row="I" data-col="1" data-trt="A" data-val="16">
+                                            <span class="val">16</span><span class="factor">A</span>
+                                        </td>
+                                        <td data-row="I" data-col="2" data-trt="B" data-val="10">
+                                            <span class="val">10</span><span class="factor">B</span>
+                                        </td>
+                                        <td data-row="I" data-col="3" data-trt="C" data-val="11">
+                                            <span class="val">11</span><span class="factor">C</span>
+                                        </td>
+                                        <td data-row="I" data-col="4" data-trt="D" data-val="13">
+                                            <span class="val">13</span><span class="factor">D</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Inspector II</th>
+                                        <td data-row="II" data-col="1" data-trt="B" data-val="15">
+                                            <span class="val">15</span><span class="factor">B</span>
+                                        </td>
+                                        <td data-row="II" data-col="2" data-trt="C" data-val="9">
+                                            <span class="val">9</span><span class="factor">C</span>
+                                        </td>
+                                        <td data-row="II" data-col="3" data-trt="D" data-val="14">
+                                            <span class="val">14</span><span class="factor">D</span>
+                                        </td>
+                                        <td data-row="II" data-col="4" data-trt="A" data-val="13">
+                                            <span class="val">13</span><span class="factor">A</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Inspector III</th>
+                                        <td data-row="III" data-col="1" data-trt="C" data-val="13">
+                                            <span class="val">13</span><span class="factor">C</span>
+                                        </td>
+                                        <td data-row="III" data-col="2" data-trt="D" data-val="12">
+                                            <span class="val">12</span><span class="factor">D</span>
+                                        </td>
+                                        <td data-row="III" data-col="3" data-trt="A" data-val="17">
+                                            <span class="val">17</span><span class="factor">A</span>
+                                        </td>
+                                        <td data-row="III" data-col="4" data-trt="B" data-val="14">
+                                            <span class="val">14</span><span class="factor">B</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Inspector IV</th>
+                                        <td data-row="IV" data-col="1" data-trt="D" data-val="16">
+                                            <span class="val">16</span><span class="factor">D</span>
+                                        </td>
+                                        <td data-row="IV" data-col="2" data-trt="A" data-val="15">
+                                            <span class="val">15</span><span class="factor">A</span>
+                                        </td>
+                                        <td data-row="IV" data-col="3" data-trt="B" data-val="13">
+                                            <span class="val">13</span><span class="factor">B</span>
+                                        </td>
+                                        <td data-row="IV" data-col="4" data-trt="C" data-val="11">
+                                            <span class="val">11</span><span class="factor">C</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
                         <div class="matrix-details" id="matrix-calc">
                             <span>Fila: <strong id="calc-row">I (Prom: 12.50)</strong></span>
