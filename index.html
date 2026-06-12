@@ -1,0 +1,2699 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diseño Cuadrado Latino (4x4) - Control Estadístico de la Calidad</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* CSS RESET & VARIABLES */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #090514;
+            --card-bg: rgba(20, 13, 38, 0.85);
+            --card-bg-solid: #140d26;
+            --border-color: #7c3aed;
+            --border-glow: rgba(124, 58, 237, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #a78bfa;
+            --highlight: #d8b4fe;
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.2);
+            --error: #ef4444;
+            --error-glow: rgba(239, 68, 68, 0.2);
+            --font-title: 'Space Grotesk', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            padding-bottom: 80px;
+            /* Space for fixed footer */
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(124, 58, 237, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(216, 180, 254, 0.05) 0%, transparent 45%);
+            background-attachment: fixed;
+        }
+
+        /* UTILITIES & GRID Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 30px;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: var(--font-title);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        section {
+            margin-bottom: 60px;
+            scroll-margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 5px solid var(--border-color);
+            padding-left: 15px;
+            text-shadow: 0 0 15px var(--border-glow);
+        }
+
+        .section-title span {
+            color: var(--highlight);
+        }
+
+        /* CARD STYLE */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--border-color), var(--highlight));
+            opacity: 0;
+            transition: opacity var(--transition-speed) ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px 0 rgba(124, 58, 237, 0.25);
+            border-color: var(--highlight);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* RESPONSIVE TABLES */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            margin: 20px 0;
+            background: rgba(10, 6, 22, 0.6);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: rgba(124, 58, 237, 0.2);
+            color: var(--highlight);
+            font-family: var(--font-title);
+            font-weight: 600;
+            padding: 14px 18px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.15);
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(124, 58, 237, 0.08);
+        }
+
+        .num {
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+        }
+
+        /* BADGES */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-sig {
+            background-color: var(--success-glow);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .badge-ns {
+            background-color: var(--error-glow);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        /* HEADER SECTION */
+        header {
+            background: linear-gradient(180deg, rgba(20, 13, 38, 0.95) 0%, rgba(9, 5, 20, 0.9) 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 45px 0;
+            position: relative;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .header-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header-tag {
+            color: var(--text-secondary);
+            font-family: var(--font-title);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            display: inline-block;
+            border: 1px solid var(--border-color);
+            padding: 4px 16px;
+            border-radius: 20px;
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            line-height: 1.2;
+            color: #ffffff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(124, 58, 237, 0.6);
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        /* SECTION CONTEXTO */
+        .contexto-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .contexto-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .desc-box {
+            font-size: 1.05rem;
+            color: #e2dcf7;
+            margin-bottom: 24px;
+            text-align: justify;
+        }
+
+        .desc-box strong {
+            color: var(--highlight);
+        }
+
+        /* Interactive Matrix */
+        .matrix-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .matrix-title {
+            font-family: var(--font-title);
+            color: var(--highlight);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            align-self: flex-start;
+        }
+
+        .latin-square {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 6px;
+            margin: 10px 0;
+        }
+
+        .latin-square th,
+        .latin-square td {
+            width: 70px;
+            height: 70px;
+            text-align: center;
+            vertical-align: middle;
+            border-radius: 8px;
+            font-weight: 700;
+            padding: 0;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .latin-square th {
+            background-color: rgba(124, 58, 237, 0.15);
+            color: var(--text-secondary);
+            font-family: var(--font-title);
+            font-size: 0.9rem;
+        }
+
+        .latin-square td {
+            background-color: rgba(20, 13, 38, 0.6);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .latin-square td .val {
+            font-size: 1.2rem;
+            color: #ffffff;
+            display: block;
+        }
+
+        .latin-square td .factor {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            position: absolute;
+            bottom: 4px;
+            right: 8px;
+            background: rgba(124, 58, 237, 0.3);
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 800;
+        }
+
+        /* Color classes by treatments */
+        .latin-square td[data-trt="A"] {
+            border-color: #f43f5e;
+        }
+
+        .latin-square td[data-trt="A"] .factor {
+            background: rgba(244, 63, 94, 0.25);
+            color: #fecdd3;
+        }
+
+        .latin-square td[data-trt="B"] {
+            border-color: #3b82f6;
+        }
+
+        .latin-square td[data-trt="B"] .factor {
+            background: rgba(59, 130, 246, 0.25);
+            color: #bfdbfe;
+        }
+
+        .latin-square td[data-trt="C"] {
+            border-color: #10b981;
+        }
+
+        .latin-square td[data-trt="C"] .factor {
+            background: rgba(16, 185, 129, 0.25);
+            color: #a7f3d0;
+        }
+
+        .latin-square td[data-trt="D"] {
+            border-color: #f59e0b;
+        }
+
+        .latin-square td[data-trt="D"] .factor {
+            background: rgba(245, 158, 11, 0.25);
+            color: #fde68a;
+        }
+
+        .latin-square td:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 15px var(--border-glow);
+            z-index: 10;
+        }
+
+        .latin-square td.highlight-active {
+            box-shadow: 0 0 20px var(--border-color);
+            background-color: rgba(124, 58, 237, 0.25);
+            border-color: var(--highlight);
+        }
+
+        .matrix-details {
+            margin-top: 15px;
+            width: 100%;
+            background: rgba(124, 58, 237, 0.05);
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .matrix-details span strong {
+            color: #ffffff;
+        }
+
+        /* SECTION HIPOTESIS */
+        .hipotesis-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .hipotesis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hipotesis-card {
+            border-left: 4px solid var(--border-color);
+            background: rgba(20, 13, 38, 0.6);
+            padding: 20px;
+            border-radius: 0 12px 12px 0;
+            border-top: 1px solid rgba(124, 58, 237, 0.2);
+            border-right: 1px solid rgba(124, 58, 237, 0.2);
+            border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .hipotesis-card h3 {
+            color: var(--highlight);
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .formula-box {
+            background: rgba(10, 6, 22, 0.5);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            border: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        .formula-box p {
+            margin-bottom: 4px;
+        }
+
+        .formula-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .subtext {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .significancia-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(216, 180, 254, 0.1) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .sig-item {
+            text-align: center;
+        }
+
+        .sig-item .label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .sig-item .value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #ffffff;
+            font-family: var(--font-title);
+        }
+
+        /* SECTION ANOVAS - GRID DE SOFTWARE */
+        .anovas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .anovas-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .software-card {
+            border: 1px solid var(--border-color);
+            background: var(--card-bg-solid);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .software-header {
+            background: rgba(124, 58, 237, 0.15);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .software-name {
+            font-size: 1.3rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .software-badge {
+            font-size: 0.75rem;
+            background: rgba(218, 180, 254, 0.2);
+            color: var(--highlight);
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .software-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Tabs inside software cards */
+        .tab-bar {
+            display: inline-flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            background: rgba(10, 6, 22, 0.7);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 30px;
+            padding: 4px;
+            width: fit-content;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-radius: 20px;
+            transition: all var(--transition-speed) ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
+            background: rgba(124, 58, 237, 0.15);
+        }
+
+        .tab-btn.active {
+            color: #ffffff;
+            background: linear-gradient(90deg, var(--border-color), var(--highlight));
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+        }
+
+        .tab-pane {
+            display: none;
+            flex-grow: 1;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .evidence-container {
+            width: 100%;
+            background: #0d0918;
+            border-radius: 8px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            margin: 15px 0 0 0;
+        }
+
+        .evidence-container img {
+            width: 100%;
+            height: auto;
+            max-height: 260px;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .evidence-container:hover img {
+            transform: scale(1.02);
+        }
+
+        .evidence-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 13, 38, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .evidence-container:hover class-overlay,
+        .evidence-container:hover .evidence-overlay {
+            opacity: 1;
+        }
+
+        .zoom-icon {
+            font-size: 2rem;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .zoom-text {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--highlight);
+        }
+
+        .code-snippet {
+            background: #0d0918;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(124, 58, 237, 0.15);
+            font-family: 'Space Grotesk', monospace;
+            font-size: 0.85rem;
+            color: #e2dcf7;
+            overflow-x: auto;
+            white-space: pre;
+            margin-top: 10px;
+        }
+
+        /* SECTION COMPARATIVO */
+        .comparativo-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+
+        .concordancia-banner {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid var(--success);
+            border-radius: 12px;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .concordancia-icon {
+            font-size: 1.8rem;
+            color: var(--success);
+        }
+
+        .comparativo-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .comparativo-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .comparativo-item {
+            background: rgba(20, 13, 38, 0.4);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            transition: border-color 0.2s ease;
+        }
+
+        .comparativo-item:hover {
+            border-color: var(--border-color);
+        }
+
+        .comparativo-item h4 {
+            color: var(--highlight);
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comparativo-item p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .comparativo-item ul {
+            list-style: none;
+            margin-top: 15px;
+            padding-left: 0;
+        }
+
+        .comparativo-item li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.92rem;
+            color: #d1c9e8;
+            line-height: 1.5;
+        }
+
+        .comparativo-item li::before {
+            content: "✦";
+            position: absolute;
+            left: 4px;
+            color: var(--highlight);
+            font-size: 0.85rem;
+            text-shadow: 0 0 8px var(--border-glow);
+            top: 1px;
+        }
+
+        .comparativo-item strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        code {
+            font-family: var(--font-title);
+            background: rgba(124, 58, 237, 0.15);
+            color: var(--highlight);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.88em;
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .excel-bug-alert {
+            background-color: rgba(245, 158, 11, 0.08);
+            border: 1px dashed var(--warning);
+            border-radius: 10px;
+            padding: 12px 18px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #fde68a;
+        }
+
+        /* SECTION CONCLUSIONES */
+        .conclusiones-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .conclusiones-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .veredictos {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .veredicto-card {
+            background: rgba(10, 6, 22, 0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .veredicto-card:hover {
+            background: rgba(124, 58, 237, 0.05);
+        }
+
+        .veredicto-info h4 {
+            font-size: 1.1rem;
+            color: #ffffff;
+        }
+
+        .veredicto-info p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .tukey-panel {
+            background: var(--card-bg-solid);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* SVG Tukey representation */
+        .tukey-svg-container {
+            width: 100%;
+            background: #0a0616;
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            margin: 15px 0;
+        }
+
+        .tukey-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .tukey-sel-btn {
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.4);
+            color: var(--text-secondary);
+            padding: 5px 15px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .tukey-sel-btn.active {
+            background: var(--border-color);
+            color: #ffffff;
+            border-color: var(--highlight);
+            box-shadow: 0 0 10px var(--border-glow);
+        }
+
+        /* Tukey table summary */
+        .tukey-table-summary {
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+
+        /* Tukey Group Equation */
+        .group-equation-card {
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 18px;
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        .group-equation-card h4 {
+            color: var(--highlight);
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .equation-text {
+            font-size: 1.3rem;
+            font-family: var(--font-title);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #ffffff;
+        }
+
+        /* Executive summary */
+        .ejecutivo-container {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+
+        .ejecutivo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .ejecutivo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .ejecutivo-item {
+            background: rgba(124, 58, 237, 0.05);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .ejecutivo-num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--border-color);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px var(--border-glow);
+        }
+
+        .ejecutivo-desc h4 {
+            font-size: 1.1rem;
+            color: var(--highlight);
+            margin-bottom: 5px;
+        }
+
+        .ejecutivo-desc p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* FIXED FOOTER */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(9, 5, 20, 0.9);
+            border-top: 1px solid var(--border-color);
+            padding: 15px 0;
+            text-align: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+            font-family: var(--font-title);
+            font-size: 0.95rem;
+            letter-spacing: 0.05em;
+            color: #ffffff;
+        }
+
+        footer strong {
+            color: var(--highlight);
+            text-shadow: 0 0 10px var(--border-glow);
+        }
+
+        /* LIGHTBOX MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(9, 5, 20, 0.97);
+            overflow: auto;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+            object-fit: contain;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-caption {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            text-align: center;
+            color: var(--highlight);
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 25px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            z-index: 1020;
+        }
+
+        .modal-close:hover {
+            color: var(--highlight);
+        }
+
+        /* Lightbox Gallery Navigation */
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(20, 13, 38, 0.6);
+            border: 1px solid var(--border-color);
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 12px 18px;
+            cursor: pointer;
+            border-radius: 50%;
+            user-select: none;
+            transition: all 0.2s ease;
+            z-index: 1010;
+        }
+
+        .lightbox-nav:hover {
+            background: var(--border-color);
+            box-shadow: 0 0 15px var(--border-glow);
+            color: var(--highlight);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .lightbox-prev {
+            left: 40px;
+        }
+
+        .lightbox-next {
+            right: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .lightbox-nav {
+                top: auto;
+                bottom: 80px;
+                transform: none;
+            }
+            .lightbox-nav:hover {
+                transform: scale(1.1);
+            }
+            .lightbox-prev {
+                left: 25%;
+            }
+            .lightbox-next {
+                right: 25%;
+            }
+        }
+
+        /* Interactive Matrix Hover Effects */
+        .latin-square td.row-active,
+        .latin-square td.col-active {
+            background-color: rgba(124, 58, 237, 0.12);
+        }
+
+        .latin-square td.trt-active {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--border-glow);
+            border-color: var(--highlight) !important;
+            background-color: rgba(216, 180, 254, 0.15);
+            z-index: 5;
+        }
+
+        .latin-square th.header-active {
+            color: #ffffff;
+            background-color: rgba(124, 58, 237, 0.4);
+            text-shadow: 0 0 10px var(--highlight);
+        }
+
+        /* Tukey Interactive Details */
+        .tukey-details-box {
+            background: rgba(10, 6, 22, 0.6);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .tukey-details-box .detail-placeholder {
+            color: var(--text-secondary);
+            text-align: center;
+            font-style: italic;
+        }
+
+        .tukey-details-box .detail-content {
+            display: none;
+        }
+
+        .tukey-details-box .detail-content.active {
+            display: block;
+        }
+
+        .tukey-details-box h4 {
+            color: var(--highlight);
+            font-size: 1rem;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tukey-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .tukey-details-item {
+            background: rgba(20, 13, 38, 0.4);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        .tukey-details-item span {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .tukey-details-item strong {
+            font-size: 0.95rem;
+            color: #ffffff;
+        }
+
+        /* SVG Interval Glow on Hover */
+        .svg-item {
+            transition: all 0.2s ease;
+        }
+        .svg-item:hover line {
+            stroke-width: 4px;
+            stroke: var(--highlight);
+            filter: drop-shadow(0 0 5px var(--border-glow));
+        }
+        .svg-item:hover circle {
+            r: 6px;
+            fill: var(--highlight);
+        }
+        .svg-item:hover text {
+            fill: var(--highlight);
+        }
+
+        /* Scrollbar aesthetics */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090514;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #7c3aed;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d8b4fe;
+        }
+
+        /* MOBILE & TABLET RESPONSIVE STYLES */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 20px 24px;
+            }
+            .section-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --transition-speed: 0.2s; /* Faster transitions on mobile */
+            }
+            body {
+                padding-bottom: 90px;
+            }
+            .container {
+                padding: 15px 16px;
+            }
+            .card {
+                padding: 20px;
+                border-radius: 12px;
+            }
+            .section-title {
+                font-size: 1.5rem;
+                margin-bottom: 18px;
+                padding-left: 10px;
+                border-left-width: 4px;
+            }
+            header {
+                padding: 35px 0;
+            }
+            header h1 {
+                font-size: 2rem;
+            }
+            header p {
+                font-size: 1rem;
+            }
+            .modal-content {
+                max-width: 95%;
+                max-height: 70vh;
+            }
+            .modal-close {
+                top: 15px;
+                right: 15px;
+                width: 44px;
+                height: 44px;
+                background: rgba(20, 13, 38, 0.8);
+                border: 1px solid var(--border-color);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 28px;
+                line-height: 1;
+            }
+            .modal-caption {
+                bottom: 20px;
+                font-size: 0.95rem;
+                padding: 0 15px;
+            }
+            .lightbox-nav {
+                bottom: 80px;
+                padding: 10px 16px;
+                font-size: 20px;
+                background: rgba(20, 13, 38, 0.8);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .latin-square th,
+            .latin-square td {
+                width: 52px;
+                height: 52px;
+                border-radius: 6px;
+            }
+            .latin-square td .val {
+                font-size: 1.05rem;
+            }
+            .latin-square td .factor {
+                font-size: 0.65rem;
+                bottom: 2px;
+                right: 4px;
+                padding: 1px 4px;
+            }
+            .latin-square th {
+                font-size: 0.75rem;
+            }
+            .matrix-details {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                padding: 10px;
+            }
+            .matrix-details span {
+                font-size: 0.8rem;
+            }
+            .significancia-banner {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 12px;
+                text-align: center;
+                padding: 15px;
+            }
+            .sig-item {
+                border-bottom: 1px dashed rgba(124, 58, 237, 0.2);
+                padding-bottom: 8px;
+            }
+            .sig-item:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+            .tab-bar {
+                display: flex;
+                flex-wrap: wrap;
+                width: 100%;
+                border-radius: 12px;
+                padding: 3px;
+            }
+            .tab-btn {
+                flex: 1 1 auto;
+                text-align: center;
+                justify-content: center;
+                font-size: 0.78rem;
+                padding: 6px 10px;
+                border-radius: 8px;
+            }
+            .evidence-container img {
+                max-height: 200px;
+            }
+            footer {
+                font-size: 0.82rem;
+                padding: 12px 10px;
+            }
+            body {
+                padding-bottom: 80px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .latin-square th,
+            .latin-square td {
+                width: 45px;
+                height: 45px;
+                border-radius: 4px;
+            }
+            .latin-square td .val {
+                font-size: 0.95rem;
+            }
+            .latin-square td .factor {
+                font-size: 0.6rem;
+                bottom: 1px;
+                right: 2px;
+                padding: 0px 3px;
+            }
+            .latin-square th {
+                font-size: 0.7rem;
+            }
+            .matrix-details {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+            .veredicto-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                padding: 12px 14px;
+            }
+            .veredicto-card .badge {
+                align-self: flex-start;
+            }
+            .tukey-selector {
+                width: 100%;
+            }
+            .tukey-sel-btn {
+                flex: 1;
+                text-align: center;
+                font-size: 0.8rem;
+                padding: 5px 10px;
+            }
+            .tukey-details-grid {
+                grid-template-columns: 1fr;
+            }
+            .equation-text {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- BLOQUE 1: HEADER -->
+    <header>
+        <div class="header-content">
+            <span class="header-tag">Control Estadístico de Calidad</span>
+            <h1>Diseño de Cuadrado Latino (4x4)</h1>
+            <p>Análisis Comparativo del Peso de Material en Minitab, Excel, R y Python</p>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- BLOQUE 2: CONTEXTO -->
+        <section id="contexto">
+            <h2 class="section-title">1. Contexto Industrial & <span>Matriz Experimental</span></h2>
+            <div class="card">
+                <div class="contexto-grid">
+                    <div>
+                        <div class="desc-box">
+                            Se evalúa el <strong>peso en gramos</strong> de un material de empaque procedente de
+                            <strong>cuatro proveedores diferentes (A, B, C, D)</strong>.
+                            Para aislar la variabilidad ajena a los proveedores, el diseño experimental controla dos
+                            variables de perturbación o factores de bloqueo:
+                            <strong>Inspectores (I, II, III, IV)</strong> (dispuestos en las filas) y <strong>Escalas de
+                                medición (1, 2, 3, 4)</strong> (dispuestas en las columnas).
+                            El experimento se conduce bajo un <strong>Diseño de Cuadrado Latino (DCL) de 4x4</strong>,
+                            asegurando que cada proveedor sea evaluado exactamente una vez por cada inspector y escala.
+                        </div>
+
+                        <h3>Variables del Diseño</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Factor</th>
+                                        <th>Tipo de Variable</th>
+                                        <th>Niveles</th>
+                                        <th>GL Teóricos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Proveedores (Tratamientos)</strong></td>
+                                        <td>Factor de Interés</td>
+                                        <td>4 (A, B, C, D)</td>
+                                        <td class="num">3</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Inspectores (Bloqueo Fila)</strong></td>
+                                        <td>Variable de Ruido Controlada</td>
+                                        <td>4 (I, II, III, IV)</td>
+                                        <td class="num">3</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Escalas (Bloqueo Columna)</strong></td>
+                                        <td>Variable de Ruido Controlada</td>
+                                        <td>4 (1, 2, 3, 4)</td>
+                                        <td class="num">3</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Error Experimental</strong></td>
+                                        <td>Variabilidad Residual</td>
+                                        <td>(p-2)(p-1) = 2x3</td>
+                                        <td class="num">6</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total</strong></td>
+                                        <td>Observaciones Totales</td>
+                                        <td>p² = 16 corridas</td>
+                                        <td class="num">15</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="matrix-container">
+                        <div class="matrix-title">Matriz Experimental Interactiva (Hacer clic en las celdas)</div>
+                        <table class="latin-square">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Escala 1</th>
+                                    <th>Escala 2</th>
+                                    <th>Escala 3</th>
+                                    <th>Escala 4</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th>Inspector I</th>
+                                    <td data-row="I" data-col="1" data-trt="A" data-val="16">
+                                        <span class="val">16</span><span class="factor">A</span>
+                                    </td>
+                                    <td data-row="I" data-col="2" data-trt="B" data-val="10">
+                                        <span class="val">10</span><span class="factor">B</span>
+                                    </td>
+                                    <td data-row="I" data-col="3" data-trt="C" data-val="11">
+                                        <span class="val">11</span><span class="factor">C</span>
+                                    </td>
+                                    <td data-row="I" data-col="4" data-trt="D" data-val="13">
+                                        <span class="val">13</span><span class="factor">D</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Inspector II</th>
+                                    <td data-row="II" data-col="1" data-trt="B" data-val="15">
+                                        <span class="val">15</span><span class="factor">B</span>
+                                    </td>
+                                    <td data-row="II" data-col="2" data-trt="C" data-val="9">
+                                        <span class="val">9</span><span class="factor">C</span>
+                                    </td>
+                                    <td data-row="II" data-col="3" data-trt="D" data-val="14">
+                                        <span class="val">14</span><span class="factor">D</span>
+                                    </td>
+                                    <td data-row="II" data-col="4" data-trt="A" data-val="13">
+                                        <span class="val">13</span><span class="factor">A</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Inspector III</th>
+                                    <td data-row="III" data-col="1" data-trt="C" data-val="13">
+                                        <span class="val">13</span><span class="factor">C</span>
+                                    </td>
+                                    <td data-row="III" data-col="2" data-trt="D" data-val="12">
+                                        <span class="val">12</span><span class="factor">D</span>
+                                    </td>
+                                    <td data-row="III" data-col="3" data-trt="A" data-val="17">
+                                        <span class="val">17</span><span class="factor">A</span>
+                                    </td>
+                                    <td data-row="III" data-col="4" data-trt="B" data-val="14">
+                                        <span class="val">14</span><span class="factor">B</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Inspector IV</th>
+                                    <td data-row="IV" data-col="1" data-trt="D" data-val="16">
+                                        <span class="val">16</span><span class="factor">D</span>
+                                    </td>
+                                    <td data-row="IV" data-col="2" data-trt="A" data-val="15">
+                                        <span class="val">15</span><span class="factor">A</span>
+                                    </td>
+                                    <td data-row="IV" data-col="3" data-trt="B" data-val="13">
+                                        <span class="val">13</span><span class="factor">B</span>
+                                    </td>
+                                    <td data-row="IV" data-col="4" data-trt="C" data-val="11">
+                                        <span class="val">11</span><span class="factor">C</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="matrix-details" id="matrix-calc">
+                            <span>Fila: <strong id="calc-row">I (Prom: 12.50)</strong></span>
+                            <span>Columna: <strong id="calc-col">1 (Prom: 15.00)</strong></span>
+                            <span>Proveedor: <strong id="calc-trt">A (Prom: 15.25)</strong></span>
+                            <span>Valor: <strong id="calc-val" style="color:var(--highlight)">16 g</strong></span>
+                        </div>
+
+                        <!-- EVIDENCIA FOTO ENUNCIADO -->
+                        <div class="evidence-container"
+                            onclick="openLightbox('image.png', 'Enunciado del Problema Industrial y Matriz Experimental')">
+                            <img src="image.png" alt="Enunciado y Matriz en Excel">
+                            <div class="evidence-overlay">
+                                <span class="zoom-icon">🔍</span>
+                                <span class="zoom-text">Ver Evidencia Original (image.png)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BLOQUE 3: HIPOTESIS -->
+        <section id="hipotesis">
+            <h2 class="section-title">2. Formulación de <span>Hipótesis Estadísticas</span></h2>
+            <div class="card">
+                <div class="hipotesis-grid">
+                    <div class="hipotesis-card">
+                        <h3>Proveedores (Tratamientos)</h3>
+                        <div class="formula-box">
+                            <p><strong>H₀:</strong> μ_A = μ_B = μ_C = μ_D</p>
+                            <p><strong>H₁:</strong> Al menos una μ_i es diferente</p>
+                        </div>
+                        <div class="subtext">
+                            H₀: El proveedor no influye en el peso promedio del material (τ_i = 0).
+                        </div>
+                    </div>
+
+                    <div class="hipotesis-card">
+                        <h3>Inspectores (Bloqueo Fila)</h3>
+                        <div class="formula-box">
+                            <p><strong>H₀:</strong> θ₁ = θ₂ = θ₃ = θ₄ = 0</p>
+                            <p><strong>H₁:</strong> Al menos un θ_j ≠ 0</p>
+                        </div>
+                        <div class="subtext">
+                            H₀: El efecto de bloque del Inspector es nulo sobre el peso promedio.
+                        </div>
+                    </div>
+
+                    <div class="hipotesis-card">
+                        <h3>Escalas (Bloqueo Columna)</h3>
+                        <div class="formula-box">
+                            <p><strong>H₀:</strong> λ₁ = λ₂ = λ₃ = λ₄ = 0</p>
+                            <p><strong>H₁:</strong> Al menos un λ_k ≠ 0</p>
+                        </div>
+                        <div class="subtext">
+                            H₀: El efecto de bloque de la Escala es nulo sobre el peso promedio.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="significancia-banner">
+                    <div class="sig-item">
+                        <div class="label">Nivel de Significancia</div>
+                        <div class="value">α = 0.05</div>
+                    </div>
+                    <div class="sig-item">
+                        <div class="label">Distribución de Prueba</div>
+                        <div class="value">F-Snedecor (3, 6)</div>
+                    </div>
+                    <div class="sig-item">
+                        <div class="label">Valor F Crítico</div>
+                        <div class="value" style="color:var(--highlight)">4.7571</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BLOQUE 4: ANOVAS (GRID 4 SOFTWARES) -->
+        <section id="anovas">
+            <h2 class="section-title">3. Resultados de <span>Análisis de Varianza (ANOVA)</span></h2>
+            <div class="anovas-grid">
+
+                <!-- MINITAB -->
+                <div class="software-card">
+                    <div class="software-header">
+                        <span class="software-name">📊 Minitab</span>
+                        <span class="software-badge">Versión Comercial</span>
+                    </div>
+                    <div class="software-content">
+                        <div class="tab-bar">
+                            <button class="tab-btn active" onclick="switchTab(this, 'minitab-img')">📸 Captura de Evidencia</button>
+                            <button class="tab-btn" onclick="switchTab(this, 'minitab-table')">📊 Tabla Reconstruida</button>
+                        </div>
+
+                        <div id="minitab-table" class="tab-pane">
+                            <h3 style="font-size:1.1rem; margin-bottom:10px; color:var(--highlight)">Análisis de
+                                Varianza</h3>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Fuente</th>
+                                            <th>GL</th>
+                                            <th>SC Ajust.</th>
+                                            <th>MC Ajust.</th>
+                                            <th>Valor F</th>
+                                            <th>Valor p</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Proveedores</strong></td>
+                                            <td class="num">3</td>
+                                            <td class="num">37.500</td>
+                                            <td class="num">12.500</td>
+                                            <td class="num">11.54</td>
+                                            <td class="num" style="color: var(--success); font-weight: bold;">0.007</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Inspector</strong></td>
+                                            <td class="num">3</td>
+                                            <td class="num">6.500</td>
+                                            <td class="num">2.167</td>
+                                            <td class="num">2.00</td>
+                                            <td class="num">0.216</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Escala</strong></td>
+                                            <td class="num">3</td>
+                                            <td class="num">26.500</td>
+                                            <td class="num">8.833</td>
+                                            <td class="num">8.15</td>
+                                            <td class="num" style="color: var(--success); font-weight: bold;">0.015</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Error</td>
+                                            <td class="num">6</td>
+                                            <td class="num">6.500</td>
+                                            <td class="num">1.083</td>
+                                            <td class="num">-</td>
+                                            <td class="num">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Total</td>
+                                            <td class="num">15</td>
+                                            <td class="num">77.000</td>
+                                            <td class="num">-</td>
+                                            <td class="num">-</td>
+                                            <td class="num">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="minitab-img" class="tab-pane active">
+                            <div class="evidence-container"
+                                onclick="openLightbox('WhatsApp Image 2026-06-12 at 12.16.57 AM.jpeg', 'Captura Minitab - Análisis de Varianza')">
+                                <img src="WhatsApp Image 2026-06-12 at 12.16.57 AM.jpeg" alt="Evidencia Minitab">
+                                <div class="evidence-overlay">
+                                    <span class="zoom-icon">🔍</span>
+                                    <span class="zoom-text">Ver Captura Minitab</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EXCEL -->
+                <div class="software-card">
+                    <div class="software-header">
+                        <span class="software-name">📈 Microsoft Excel</span>
+                        <span class="software-badge">Hoja de Cálculo</span>
+                    </div>
+                    <div class="software-content">
+                        <div class="tab-bar">
+                            <button class="tab-btn active" onclick="switchTab(this, 'excel-img')">📸 Captura de Evidencia</button>
+                            <button class="tab-btn" onclick="switchTab(this, 'excel-table')">📊 Tabla Reconstruida</button>
+                        </div>
+
+                        <div id="excel-table" class="tab-pane">
+                            <h3 style="font-size:1.1rem; margin-bottom:10px; color:var(--highlight)">Tabla ANOVA</h3>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Fuente de variación</th>
+                                            <th>Suma de cuadrados</th>
+                                            <th>Grados de libertad</th>
+                                            <th>Cuadrado medio</th>
+                                            <th>F</th>
+                                            <th>Ft</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Tratamientos (proveedores)</strong></td>
+                                            <td class="num">37.500</td>
+                                            <td class="num">3</td>
+                                            <td class="num">12.5000</td>
+                                            <td class="num">11.5385</td>
+                                            <td class="num">4.7570627</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Inspector(renglones)</strong></td>
+                                            <td class="num">6.500</td>
+                                            <td class="num">3</td>
+                                            <td class="num">2.1667</td>
+                                            <td class="num">2.0000</td>
+                                            <td class="num">4.7570627</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Escalas (Columnas)</strong></td>
+                                            <td class="num">26.500</td>
+                                            <td class="num">3</td>
+                                            <td class="num">8.8333</td>
+                                            <td class="num">8.1538</td>
+                                            <td class="num">4.7570627</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Error</td>
+                                            <td class="num">6.500</td>
+                                            <td class="num">6</td>
+                                            <td class="num">1.083</td>
+                                            <td class="num">-</td>
+                                            <td class="num">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Total</td>
+                                            <td class="num">77.000</td>
+                                            <td class="num">15</td>
+                                            <td class="num">-</td>
+                                            <td class="num">-</td>
+                                            <td class="num">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:5px;">
+                                F crítico calculado: <span
+                                    style="color:#fde68a; background:rgba(245, 158, 11, 0.2); padding: 2px 6px; border-radius: 4px;">4.7570627</span>
+                            </div>
+                        </div>
+
+                        <div id="excel-img" class="tab-pane active">
+                            <div class="evidence-container"
+                                onclick="openLightbox('WhatsApp Image 2026-06-12 at 12.16.58 AM (2).jpeg', 'Captura Excel - Tabla ANOVA')">
+                                <img src="WhatsApp Image 2026-06-12 at 12.16.58 AM (2).jpeg" alt="Evidencia Excel">
+                                <div class="evidence-overlay">
+                                    <span class="zoom-icon">🔍</span>
+                                    <span class="zoom-text">Ver Captura Excel</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- R SCRIPT -->
+                <div class="software-card">
+                    <div class="software-header">
+                        <span class="software-name">📐 R Project</span>
+                        <span class="software-badge">Script Estadístico</span>
+                    </div>
+                    <div class="software-content">
+                        <div class="tab-bar">
+                            <button class="tab-btn active" onclick="switchTab(this, 'r-img')">📸 Captura de Evidencia</button>
+                            <button class="tab-btn" onclick="switchTab(this, 'r-table')">📊 Tabla Reconstruida</button>
+                            <button class="tab-btn" onclick="switchTab(this, 'r-code')">💻 Código R</button>
+                        </div>
+
+                        <div id="r-table" class="tab-pane">
+                            <h3 style="font-size:1.1rem; margin-bottom:10px; color:var(--highlight)">=== TABLA ANOVA -
+                                CUADRADO LATINO ===</h3>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Fuente</th>
+                                            <th>SC</th>
+                                            <th>GL</th>
+                                            <th>CM</th>
+                                            <th>F</th>
+                                            <th>p_valor</th>
+                                            <th>Sig</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Inspector (Fila)</strong></td>
+                                            <td class="num">6.5</td>
+                                            <td class="num">3</td>
+                                            <td class="num">2.1667</td>
+                                            <td class="num">2.0000</td>
+                                            <td class="num">0.2156</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Escala (Col.)</strong></td>
+                                            <td class="num">26.5</td>
+                                            <td class="num">3</td>
+                                            <td class="num">8.8333</td>
+                                            <td class="num">8.1538</td>
+                                            <td class="num" style="color: var(--success); font-weight: bold;">0.0154
+                                            </td>
+                                            <td style="color:#d8b4fe; font-weight:bold;">(*)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Proveedor (Trat.)</strong></td>
+                                            <td class="num">37.5</td>
+                                            <td class="num">3</td>
+                                            <td class="num">12.5000</td>
+                                            <td class="num">11.5385</td>
+                                            <td class="num" style="color: var(--success); font-weight: bold;">0.0066
+                                            </td>
+                                            <td style="color:#d8b4fe; font-weight:bold;">(**)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Error</td>
+                                            <td class="num">6.5</td>
+                                            <td class="num">6</td>
+                                            <td class="num">1.0833</td>
+                                            <td class="num">NA</td>
+                                            <td class="num">NA</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Total</td>
+                                            <td class="num">77.0</td>
+                                            <td class="num">15</td>
+                                            <td class="num">NA</td>
+                                            <td class="num">NA</td>
+                                            <td class="num">NA</td>
+                                            <td></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="font-size:0.85rem; color:var(--text-secondary);">
+                                (**) p&lt;0.01 &nbsp; (*) p&lt;0.05 &nbsp;|&nbsp; F crítico: 4.7571
+                            </div>
+                        </div>
+
+                        <div id="r-code" class="tab-pane">
+                            <div class="code-snippet"># Código R para ANOVA Cuadrado Latino
+                                modelo <- lm(Peso ~ Inspector + Escala + Proveedor, data=datos) anova_tabla <-
+                                    anova(modelo) print(anova_tabla)</div>
+                            </div>
+
+                            <div id="r-img" class="tab-pane active">
+                                <div class="evidence-container"
+                                    onclick="openLightbox('WhatsApp Image 2026-06-12 at 12.16.57 AM (3).jpeg', 'Captura R Script - Tabla ANOVA')">
+                                    <img src="WhatsApp Image 2026-06-12 at 12.16.57 AM (3).jpeg" alt="Evidencia R">
+                                    <div class="evidence-overlay">
+                                        <span class="zoom-icon">🔍</span>
+                                        <span class="zoom-text">Ver Captura R</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PYTHON -->
+                    <div class="software-card">
+                        <div class="software-header">
+                            <span class="software-name">🐍 Python (Statsmodels)</span>
+                            <span class="software-badge">Librería Científica</span>
+                        </div>
+                        <div class="software-content">
+                            <div class="tab-bar">
+                                <button class="tab-btn active" onclick="switchTab(this, 'py-img')">📸 Captura de Evidencia</button>
+                                <button class="tab-btn" onclick="switchTab(this, 'py-table')">📊 Tabla Reconstruida</button>
+                                <button class="tab-btn" onclick="switchTab(this, 'py-code')">💻 Código Python</button>
+                            </div>
+
+                            <div id="py-table" class="tab-pane">
+                                <div class="table-container">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Fuente</th>
+                                                <th>SC</th>
+                                                <th>GL</th>
+                                                <th>CM</th>
+                                                <th>F_calc</th>
+                                                <th>p-valor</th>
+                                                <th>Sig</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Inspectores</strong></td>
+                                                <td class="num">6.5000</td>
+                                                <td class="num">3</td>
+                                                <td class="num">2.1667</td>
+                                                <td class="num">2.0000</td>
+                                                <td class="num">0.2156</td>
+                                                <td style="color: var(--error);">ns</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Escalas</strong></td>
+                                                <td class="num">26.5000</td>
+                                                <td class="num">3</td>
+                                                <td class="num">8.8333</td>
+                                                <td class="num">8.1538</td>
+                                                <td class="num" style="color: var(--success); font-weight: bold;">0.0154
+                                                </td>
+                                                <td style="color:#d8b4fe; font-weight:bold;">***</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Proveedores</strong></td>
+                                                <td class="num">37.5000</td>
+                                                <td class="num">3</td>
+                                                <td class="num">12.5000</td>
+                                                <td class="num">11.5385</td>
+                                                <td class="num" style="color: var(--success); font-weight: bold;">0.0066
+                                                </td>
+                                                <td style="color:#d8b4fe; font-weight:bold;">***</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Error</td>
+                                                <td class="num">6.5000</td>
+                                                <td class="num">6</td>
+                                                <td class="num">1.0833</td>
+                                                <td class="num">-</td>
+                                                <td class="num">-</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Total</td>
+                                                <td class="num">77.0000</td>
+                                                <td class="num">15</td>
+                                                <td class="num">-</td>
+                                                <td class="num">-</td>
+                                                <td class="num">-</td>
+                                                <td>-</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div style="font-size:0.85rem; color:var(--text-secondary);">
+                                    Sig: *** p&lt;0.05 (significativo), ns = no significativo
+                                </div>
+                            </div>
+
+                            <div id="py-code" class="tab-pane">
+                                <div class="code-snippet">import statsmodels.api as sm
+                                    from statsmodels.formula.api import ols
+
+                                    model = ols('Peso ~ C(Inspectores) + C(Escalas) + C(Proveedores)', data=df).fit()
+                                    anova_table = sm.stats.anova_lm(model, typ=1)
+                                    print(anova_table)</div>
+                            </div>
+
+                            <div id="py-img" class="tab-pane active">
+                                <div class="evidence-container"
+                                    onclick="openLightbox('WhatsApp Image 2026-06-12 at 12.16.58 AM (1).jpeg', 'Captura Python - Resultados ANOVA')">
+                                    <img src="WhatsApp Image 2026-06-12 at 12.16.58 AM (1).jpeg" alt="Evidencia Python">
+                                    <div class="evidence-overlay">
+                                        <span class="zoom-icon">🔍</span>
+                                        <span class="zoom-text">Ver Captura Python</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+        </section>
+
+        <!-- BLOQUE 5: COMPARATIVO -->
+        <section id="comparativo">
+            <h2 class="section-title">4. Concordancia Aritmética & <span>Diferencias de Formato</span></h2>
+            <div class="card">
+                <div class="comparativo-container">
+                    <div class="concordancia-banner">
+                        <span class="concordancia-icon">✔</span>
+                        <div>
+                            <h3 style="color:#ffffff; font-size:1.15rem;">Consenso Estadístico Absoluto</h3>
+                            <p style="color:var(--text-secondary); font-size:0.95rem;">
+                                Las cuatro herramientas (Minitab, Excel, R y Python) concuerdan perfectamente en los
+                                cálculos del experimento:
+                                Sumas de Cuadrados (SC), Cuadrados Medios (CM) y Estadísticos F calculados coinciden
+                                hasta el último decimal disponible.
+                            </p>
+                        </div>
+                    </div>
+
+                    <ul class="comparativo-list">
+                        <li class="comparativo-item">
+                            <h4>Formatos de Decimales</h4>
+                            <p>Cada software trunca o redondea los decimales de manera diferente en la interfaz de
+                                salida:</p>
+                            <ul>
+                                <li><strong>Minitab:</strong> Emplea 3 decimales para las sumas de cuadrados e
+                                    inspectores (<code>37.500</code>, <code>2.167</code>) y p-valores redondeados a 3 decimales (<code>0.007</code>,
+                                    <code>0.015</code>, <code>0.216</code>).</li>
+                                <li><strong>R:</strong> Formatea SC a un decimal (<code>37.5</code>, <code>6.5</code>), y los Cuadrados Medios
+                                    y valores F a 4 decimales (<code>12.5000</code>, <code>11.5385</code>, <code>0.2156</code>).</li>
+                                <li><strong>Python:</strong> Muestra un formato consistente a 4 decimales fijos en todas
+                                    las columnas numéricas (<code>37.5000</code>, <code>1.0833</code>, <code>11.5385</code>).</li>
+                                <li><strong>Excel:</strong> Muestra las sumas de cuadrados en formato de 3 decimales y
+                                    las estadísticas F calculadas con 4 decimales (<code>11.5385</code>), pero el valor crítico Ft
+                                    con 7 decimales (<code>4.7570627</code>).</li>
+                            </ul>
+                        </li>
+
+                        <li class="comparativo-item">
+                            <h4>Nombres de los Factores</h4>
+                            <p>Las etiquetas descriptivas varían según la interfaz y el idioma por defecto del software:
+                            </p>
+                            <ul>
+                                <li><strong>Minitab:</strong> <code>Proveedores</code> | <code>Inspector</code> | <code>Escala</code> (Nombres directos
+                                    en singular/plural).</li>
+                                <li><strong>R:</strong> <code>Inspector (Fila)</code> | <code>Escala (Col.)</code> | <code>Proveedor (Trat.)</code>
+                                    (Aclara la posición en el cuadrado latino).</li>
+                                <li><strong>Python:</strong> <code>Inspectores</code> | <code>Escalas</code> | <code>Proveedores</code> (Nombres
+                                    pluralizados en español según el dataframe creado).</li>
+                                <li><strong>Excel:</strong> <code>Tratamientos (proveedores)</code> | <code>Inspector(renglones)</code> |
+                                    <code>Escalas (Columnas)</code> (Clasificación técnica y operativa).</li>
+                            </ul>
+                        </li>
+
+                        <li class="comparativo-item">
+                            <h4>Orden de Filas en la Tabla</h4>
+                            <p>El orden de presentación de los factores varía en las tablas de salida:</p>
+                            <ul>
+                                <li><strong>R:</strong> Coloca primero <code>Inspector (Fila)</code>, seguido de <code>Escala (Col.)</code> y
+                                    finalmente <code>Proveedor (Trat.)</code>.</li>
+                                <li><strong>Minitab, Python y Excel:</strong> Anteponen los <code>Proveedores / Tratamientos</code>
+                                    en la fila superior, seguidos de los bloques de Inspectores y Escalas.</li>
+                            </ul>
+                        </li>
+
+                        <li class="comparativo-item">
+                            <h4>Simbología de Significancia</h4>
+                            <p>Los indicadores visuales de significancia estadística son muy distintos:</p>
+                            <ul>
+                                <li><strong>R:</strong> Utiliza códigos de significancia tradicionales: <code>(*)</code> para
+                                    p-valores menores a 0.05 y <code>(**)</code> para menores a 0.01.</li>
+                                <li><strong>Python:</strong> Emplea <code>***</code> para denotar factores significativos bajo la
+                                    regla <code>p &lt; 0.05</code> y la etiqueta <code>ns</code> para los no significativos.</li>
+                                <li><strong>Minitab e Excel:</strong> No incluyen símbolos de significancia rápidos,
+                                    requiriendo que el analista compare visualmente el p-valor frente al alfa, o el
+                                    valor F frente a la Ft.</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <div class="excel-bug-alert">
+                        ⚠️ <strong>Fe errata en la plantilla de Excel original:</strong> En la captura de Excel se
+                        observa la etiqueta
+                        <code>F_a,4,12</code> para denotar el valor crítico. Esto es un <strong>error tipográfico de texto en la
+                            plantilla de Excel</strong>,
+                        pues la fórmula interna utilizada `=+INV.F.CD(0.05,D84,D87)` calcula correctamente el valor
+                        crítico con 3 GL en el numerador
+                        y 6 GL en el denominador (dando el valor correcto <code>4.7570627</code>). El rótulo debió decir
+                        <code>F_0.05,3,6</code>.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BLOQUE 6: CONCLUSIONES & TUKEY -->
+        <section id="conclusiones">
+            <h2 class="section-title">5. Conclusiones & <span>Prueba Post-Hoc de Tukey</span></h2>
+            <div class="card">
+                <div class="conclusiones-grid">
+                    <div>
+                        <h3>Veredicto Individual por Factor</h3>
+                        <div class="veredictos">
+                            <div class="veredicto-card">
+                                <div class="veredicto-info">
+                                    <h4>Proveedores (Tratamientos)</h4>
+                                    <p>F_calc = 11.5385 &nbsp;|&nbsp; p-valor = 0.0066</p>
+                                </div>
+                                <span class="badge badge-sig">Significativo</span>
+                            </div>
+
+                            <div class="veredicto-card">
+                                <div class="veredicto-info">
+                                    <h4>Escalas (Bloqueo Columnas)</h4>
+                                    <p>F_calc = 8.1538 &nbsp;|&nbsp; p-valor = 0.0154</p>
+                                </div>
+                                <span class="badge badge-sig">Significativo</span>
+                            </div>
+
+                            <div class="veredicto-card">
+                                <div class="veredicto-info">
+                                    <h4>Inspectores (Bloqueo Filas)</h4>
+                                    <p>F_calc = 2.0000 &nbsp;|&nbsp; p-valor = 0.2156</p>
+                                </div>
+                                <span class="badge badge-ns">No Significativo</span>
+                            </div>
+                        </div>
+
+                        <div class="group-equation-card">
+                            <h4>Ecuación de Agrupamiento Tukey (Proveedores)</h4>
+                            <div class="equation-text">A (a) = D (a) ≥ B (ab) ≥ C (b)</div>
+                            <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:5px;">
+                                *Medias que no comparten letras son significativamente diferentes (HSD = 2.5478).
+                            </p>
+                        </div>
+
+                        <!-- TUKEY RAW TEXT COMPARISON -->
+                        <div class="evidence-container" style="margin-top:20px;"
+                            onclick="openLightbox('WhatsApp Image 2026-06-12 at 12.16.58 AM.jpeg', 'Comparación de Tukey en R - Pares y HSD')">
+                            <img src="WhatsApp Image 2026-06-12 at 12.16.58 AM.jpeg" alt="Evidencia Texto Tukey">
+                            <div class="evidence-overlay">
+                                <span class="zoom-icon">🔍</span>
+                                <span class="zoom-text">Ver Pares de Tukey en R</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tukey-panel">
+                        <h3>Intervalos de Confianza de Tukey (95%)</h3>
+                        <div class="tukey-selector">
+                            <button class="tukey-sel-btn active"
+                                onclick="switchTukeyPlot('proveedores')">Proveedores</button>
+                            <button class="tukey-sel-btn" onclick="switchTukeyPlot('inspectores')">Inspectores</button>
+                        </div>
+
+                        <div class="tukey-svg-container">
+                            <!-- SVG PROVEEDORES -->
+                            <svg id="svg-proveedores" viewBox="0 0 500 300" width="100%" height="100%">
+                                <!-- Grid Lines -->
+                                <line x1="100" y1="20" x2="100" y2="250" stroke="#7c3aed" stroke-dasharray="3"
+                                    opacity="0.3"></line>
+                                <line x1="200" y1="20" x2="200" y2="250" stroke="#7c3aed" stroke-dasharray="3"
+                                    opacity="0.3"></line>
+                                <line x1="300" y1="20" x2="300" y2="250" stroke="#7c3aed" stroke-dasharray="3"
+                                    opacity="0.3"></line>
+                                <line x1="400" y1="20" x2="400" y2="250" stroke="#7c3aed" stroke-dasharray="3"
+                                    opacity="0.3"></line>
+
+                                <!-- ZERO LINE (400 represents 0 in coordinates system when mapping -7.5 to 5.0) -->
+                                <!-- Mapping formula: X = 100 + (val - (-7.5)) * (350 / 12.5) -->
+                                <!-- 0 maps to: 100 + (7.5) * 28 = 310 -->
+                                <line x1="310" y1="15" x2="310" y2="260" stroke="#ef4444" stroke-width="2"
+                                    stroke-dasharray="4"></line>
+                                <text x="310" y="12" fill="#ef4444" font-size="9" text-anchor="middle"
+                                    font-weight="bold">Línea Cero</text>
+
+                                <!-- X Axis Labels -->
+                                <text x="100" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">-7.5</text>
+                                <text x="170" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">-5.0</text>
+                                <text x="240" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">-2.5</text>
+                                <text x="310" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">0.0</text>
+                                <text x="380" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">2.5</text>
+                                <text x="450" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">5.0</text>
+
+                                <!-- Intervals -->
+                                <!-- B - A: mean = -2.25, CI = [-4.7978, 0.2978] -> X range = [175.7, 318.3], Center = 247 -->
+                                <g class="svg-item" data-comp="Proveedor B vs A" data-mean="-2.2500" data-lwr="-4.7978" data-upr="0.2978" data-sig="false" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="45" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">B - A</text>
+                                    <line x1="175.7" y1="42" x2="318.3" y2="42" stroke="#a78bfa" stroke-width="2">
+                                    </line>
+                                    <circle cx="247" cy="42" r="4" fill="#7c3aed"></circle>
+                                    <title>B - A: [-4.7978, 0.2978] - No Significativo (Cruza cero)</title>
+                                </g>
+
+                                <!-- C - A: mean = -4.25, CI = [-6.7978, -1.7022] -> X range = [119.7, 262.3], Center = 191 -->
+                                <g class="svg-item" data-comp="Proveedor C vs A" data-mean="-4.2500" data-lwr="-6.7978" data-upr="-1.7022" data-sig="true" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="80" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">C - A</text>
+                                    <line x1="119.7" y1="77" x2="262.3" y2="77" stroke="#38bdf8" stroke-width="2">
+                                    </line>
+                                    <circle cx="191" cy="77" r="4" fill="#0284c7"></circle>
+                                    <title>C - A: [-6.7978, -1.7022] - DIFERENCIA SIGNIFICATIVA</title>
+                                </g>
+
+                                <!-- D - A: mean = -1.50, CI = [-4.0478, 1.0478] -> X range = [196.7, 339.3], Center = 268 -->
+                                <g class="svg-item" data-comp="Proveedor D vs A" data-mean="-1.5000" data-lwr="-4.0478" data-upr="1.0478" data-sig="false" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="115" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">D - A</text>
+                                    <line x1="196.7" y1="112" x2="339.3" y2="112" stroke="#a78bfa" stroke-width="2">
+                                    </line>
+                                    <circle cx="268" cy="112" r="4" fill="#7c3aed"></circle>
+                                    <title>D - A: [-4.0478, 1.0478] - No Significativo (Cruza cero)</title>
+                                </g>
+
+                                <!-- C - B: mean = -2.00, CI = [-4.5478, 0.5478] -> X range = [182.7, 325.3], Center = 254 -->
+                                <g class="svg-item" data-comp="Proveedor C vs B" data-mean="-2.0000" data-lwr="-4.5478" data-upr="0.5478" data-sig="false" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="150" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">C - B</text>
+                                    <line x1="182.7" y1="147" x2="325.3" y2="147" stroke="#a78bfa" stroke-width="2">
+                                    </line>
+                                    <circle cx="254" cy="147" r="4" fill="#7c3aed"></circle>
+                                    <title>C - B: [-4.5478, 0.5478] - No Significativo (Cruza cero)</title>
+                                </g>
+
+                                <!-- D - B: mean = 0.75, CI = [-1.7978, 3.2978] -> X range = [259.7, 402.3], Center = 331 -->
+                                <g class="svg-item" data-comp="Proveedor D vs B" data-mean="0.7500" data-lwr="-1.7978" data-upr="3.2978" data-sig="false" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="185" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">D - B</text>
+                                    <line x1="259.7" y1="182" x2="402.3" y2="182" stroke="#a78bfa" stroke-width="2">
+                                    </line>
+                                    <circle cx="331" cy="182" r="4" fill="#7c3aed"></circle>
+                                    <title>D - B: [-1.7978, 3.2978] - No Significativo (Cruza cero)</title>
+                                </g>
+
+                                <!-- D - C: mean = 2.75, CI = [0.2022, 5.2978] -> X range = [315.7, 458.3], Center = 387 -->
+                                <g class="svg-item" data-comp="Proveedor D vs C" data-mean="2.7500" data-lwr="0.2022" data-upr="5.2978" data-sig="true" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="220" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">D - C</text>
+                                    <line x1="315.7" y1="217" x2="458.3" y2="217" stroke="#38bdf8" stroke-width="2">
+                                    </line>
+                                    <circle cx="387" cy="217" r="4" fill="#0284c7"></circle>
+                                    <title>D - C: [0.2022, 5.2978] - DIFERENCIA SIGNIFICATIVA</title>
+                                </g>
+                            </svg>
+
+                            <!-- SVG INSPECTORES -->
+                            <svg id="svg-inspectores" viewBox="0 0 500 300" width="100%" height="100%"
+                                style="display:none">
+                                <!-- Grid Lines -->
+                                <line x1="100" y1="20" x2="100" y2="250" stroke="#7c3aed" stroke-dasharray="3"
+                                    opacity="0.3"></line>
+                                <line x1="200" y1="20" x2="200" y2="250" stroke="#7c3aed" stroke-dasharray="3"
+                                    opacity="0.3"></line>
+                                <line x1="300" y1="20" x2="300" y2="250" stroke="#7c3aed" stroke-dasharray="3"
+                                    opacity="0.3"></line>
+                                <line x1="400" y1="20" x2="400" y2="250" stroke="#7c3aed" stroke-dasharray="3"
+                                    opacity="0.3"></line>
+
+                                <!-- ZERO LINE (Mapped from range -3.0 to 4.0) -->
+                                <!-- X = 100 + (val - (-3.0)) * (350 / 7.0) -> 0.0 maps to: 100 + (3) * 50 = 250 -->
+                                <line x1="250" y1="15" x2="250" y2="260" stroke="#ef4444" stroke-width="2"
+                                    stroke-dasharray="4"></line>
+                                <text x="250" y="12" fill="#ef4444" font-size="9" text-anchor="middle"
+                                    font-weight="bold">Línea Cero</text>
+
+                                <!-- X Axis Labels -->
+                                <text x="100" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">-3.0</text>
+                                <text x="150" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">-1.6</text>
+                                <text x="200" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">-0.8</text>
+                                <text x="250" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">0.0</text>
+                                <text x="300" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">1.0</text>
+                                <text x="350" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">2.0</text>
+                                <text x="400" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">3.0</text>
+                                <text x="450" y="275" fill="#a78bfa" font-size="9" text-anchor="middle">4.0</text>
+
+                                <!-- Intervals (All contain 0) -->
+                                <!-- 2 - 1: mean = 0.25, CI = [-2.2978, 2.7978] -> X range = [135, 390], Center = 262.5 -->
+                                <g class="svg-item" data-comp="Inspector II vs I" data-mean="0.2500" data-lwr="-2.2978" data-upr="2.7978" data-sig="false" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="45" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">2 - 1</text>
+                                    <line x1="135" y1="42" x2="390" y2="42" stroke="#a78bfa" stroke-width="2"></line>
+                                    <circle cx="262.5" cy="42" r="4" fill="#7c3aed"></circle>
+                                    <title>2 - 1: [-2.2978, 2.7978] - No Significativo (Cruza cero)</title>
+                                </g>
+                                <!-- 3 - 1: mean = 1.50, CI = [-1.0478, 4.0478] -> X range = [197, 452], Center = 325 -->
+                                <g class="svg-item" data-comp="Inspector III vs I" data-mean="1.5000" data-lwr="-1.0478" data-upr="4.0478" data-sig="false" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="80" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">3 - 1</text>
+                                    <line x1="197" y1="77" x2="452" y2="77" stroke="#a78bfa" stroke-width="2"></line>
+                                    <circle cx="325" cy="77" r="4" fill="#7c3aed"></circle>
+                                    <title>3 - 1: [-1.0478, 4.0478] - No Significativo (Cruza cero)</title>
+                                </g>
+                                <!-- 4 - 1: mean = 1.25, CI = [-1.2978, 3.7978] -> X range = [185, 440], Center = 312.5 -->
+                                <g class="svg-item" data-comp="Inspector IV vs I" data-mean="1.2500" data-lwr="-1.2978" data-upr="3.7978" data-sig="false" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="115" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">4 - 1</text>
+                                    <line x1="185" y1="112" x2="440" y2="112" stroke="#a78bfa" stroke-width="2"></line>
+                                    <circle cx="312.5" cy="112" r="4" fill="#7c3aed"></circle>
+                                    <title>4 - 1: [-1.2978, 3.7978] - No Significativo (Cruza cero)</title>
+                                </g>
+                                <!-- 3 - 2: mean = 1.25, CI = [-1.2978, 3.7978] -> X range = [185, 440], Center = 312.5 -->
+                                <g class="svg-item" data-comp="Inspector III vs II" data-mean="1.2500" data-lwr="-1.2978" data-upr="3.7978" data-sig="false" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="150" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">3 - 2</text>
+                                    <line x1="185" y1="147" x2="440" y2="147" stroke="#a78bfa" stroke-width="2"></line>
+                                    <circle cx="312.5" cy="147" r="4" fill="#7c3aed"></circle>
+                                    <title>3 - 2: [-1.2978, 3.7978] - No Significativo (Cruza cero)</title>
+                                </g>
+                                <!-- 4 - 2: mean = 1.00, CI = [-1.5478, 3.5478] -> X range = [172, 427], Center = 300 -->
+                                <g class="svg-item" data-comp="Inspector IV vs II" data-mean="1.0000" data-lwr="-1.5478" data-upr="3.5478" data-sig="false" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="185" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">4 - 2</text>
+                                    <line x1="172" y1="182" x2="427" y2="182" stroke="#a78bfa" stroke-width="2"></line>
+                                    <circle cx="300" cy="182" r="4" fill="#7c3aed"></circle>
+                                    <title>4 - 2: [-1.5478, 3.5478] - No Significativo (Cruza cero)</title>
+                                </g>
+                                <!-- 4 - 3: mean = -0.25, CI = [-2.7978, 2.2978] -> X range = [110, 365], Center = 237.5 -->
+                                <g class="svg-item" data-comp="Inspector IV vs III" data-mean="-0.2500" data-lwr="-2.7978" data-upr="2.2978" data-sig="false" data-hsd="2.5478" style="cursor:pointer">
+                                    <text x="85" y="220" fill="#ffffff" font-size="10" font-weight="bold"
+                                        text-anchor="end">4 - 3</text>
+                                    <line x1="110" y1="217" x2="365" y2="217" stroke="#a78bfa" stroke-width="2"></line>
+                                    <circle cx="237.5" cy="217" r="4" fill="#7c3aed"></circle>
+                                    <title>4 - 3: [-2.7978, 2.2978] - No Significativo (Cruza cero)</title>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Caja de Detalles Tukey Interactiva -->
+                        <div class="tukey-details-box" id="tukey-details">
+                            <div class="detail-placeholder" id="tukey-placeholder">
+                                Pasa el cursor sobre un intervalo de confianza en el gráfico superior para analizar su significancia
+                            </div>
+                            <div class="detail-content" id="tukey-detail-content">
+                                <h4>Comparación: <span id="detail-comp" style="color:#ffffff">A vs B</span> <span id="detail-badge" class="badge">Significativo</span></h4>
+                                <div class="tukey-details-grid">
+                                    <div class="tukey-details-item">
+                                        <span>Diferencia de Medias</span>
+                                        <strong id="detail-mean">0.00</strong>
+                                    </div>
+                                    <div class="tukey-details-item">
+                                        <span>Rango de HSD (Tukey)</span>
+                                        <strong id="detail-hsd">2.5478</strong>
+                                    </div>
+                                    <div class="tukey-details-item">
+                                        <span>Intervalo de Confianza (95%)</span>
+                                        <strong id="detail-ci">[-0.00, 0.00]</strong>
+                                    </div>
+                                    <div class="tukey-details-item">
+                                        <span>Conclusión Estadística</span>
+                                        <strong id="detail-conclusion">No difieren significativamente</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOGGLE TUKEY EVIDENCE IMAGES -->
+                        <div id="tukey-evidence-proveedores" class="evidence-container"
+                            onclick="openLightbox('WhatsApp Image 2026-06-12 at 12.16.57 AM (1).jpeg', 'Tukey para Proveedores en Minitab')">
+                            <img src="WhatsApp Image 2026-06-12 at 12.16.57 AM (1).jpeg"
+                                alt="Tukey Proveedores Minitab">
+                            <div class="evidence-overlay">
+                                <span class="zoom-icon">🔍</span>
+                                <span class="zoom-text">Ver Captura Tukey Proveedores</span>
+                            </div>
+                        </div>
+
+                        <div id="tukey-evidence-inspectores" class="evidence-container" style="display:none"
+                            onclick="openLightbox('WhatsApp Image 2026-06-12 at 12.16.57 AM (2).jpeg', 'Tukey para Inspectores en Minitab')">
+                            <img src="WhatsApp Image 2026-06-12 at 12.16.57 AM (2).jpeg"
+                                alt="Tukey Inspectores Minitab">
+                            <div class="evidence-overlay">
+                                <span class="zoom-icon">🔍</span>
+                                <span class="zoom-text">Ver Captura Tukey Inspectores</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESUMEN EJECUTIVO (4 PUNTOS CLAVE) -->
+                <div class="ejecutivo-container">
+                    <h3 style="color:#ffffff; font-size:1.3rem; margin-bottom:10px;">Resumen Ejecutivo & Decisiones de
+                        Ingeniería</h3>
+                    <div class="ejecutivo-grid">
+                        <div class="ejecutivo-item">
+                            <div class="ejecutivo-num">1</div>
+                            <div class="ejecutivo-desc">
+                                <h4>Selección de Proveedores Óptimos</h4>
+                                <p>Se concluye que el <strong>Proveedor A (media = 15.25 g)</strong> y el
+                                    <strong>Proveedor D (13.75 g)</strong> son estadísticamente superiores e idénticos
+                                    entre sí. Se debe evitar la compra al <strong>Proveedor C (11.00 g)</strong>, ya que
+                                    produce materiales con peso promedio significativamente inferior al estándar de A y
+                                    D.</p>
+                            </div>
+                        </div>
+
+                        <div class="ejecutivo-item">
+                            <div class="ejecutivo-num">2</div>
+                            <div class="ejecutivo-desc">
+                                <h4>Estandarización de Operadores (Inspectores)</h4>
+                                <p>El factor Inspectores <strong>NO es significativo (p = 0.2156)</strong>. Esto
+                                    demuestra que los procedimientos de auditoría y medición están correctamente
+                                    estandarizados entre el personal, y que los inspectores (I, II, III, IV) no
+                                    introducen sesgos en el control de peso.</p>
+                            </div>
+                        </div>
+
+                        <div class="ejecutivo-item">
+                            <div class="ejecutivo-num">3</div>
+                            <div class="ejecutivo-desc">
+                                <h4>Urgencia de Calibración de Escalas</h4>
+                                <p>El factor Escalas de medición <strong>SÍ es altamente significativo (p =
+                                        0.0154)</strong>. Esto revela una discrepancia crítica entre los equipos
+                                    físicos. Se requiere una <strong>acción inmediata de calibración técnica</strong> en
+                                    las cuatro escalas de la planta para eliminar la variabilidad inducida por las
+                                    máquinas.</p>
+                            </div>
+                        </div>
+
+                        <div class="ejecutivo-item">
+                            <div class="ejecutivo-num">4</div>
+                            <div class="ejecutivo-desc">
+                                <h4>Optimización Operativa y Financiera</h4>
+                                <p>Dado que el Proveedor B (13.00 g) comparte grupo de Tukey con C (inferior) y con A/D
+                                    (superiores), se sugiere priorizar los contratos con A o D. Adicionalmente, al
+                                    validar que los inspectores no afectan la medición, se pueden optimizar turnos de
+                                    trabajo sin riesgo de alterar el control de calidad.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+
+    <!-- STICKY FOOTER -->
+    <footer>
+        Análisis Estadístico Desarrollado por <strong>Milagros Lidia Mayta Soto</strong>
+    </footer>
+
+    <!-- LIGHTBOX MODAL -->
+    <div id="lightbox" class="modal" onclick="closeLightbox()">
+        <span class="modal-close" onclick="closeLightbox()">&times;</span>
+        <button class="lightbox-nav lightbox-prev" onclick="prevImage(event)">&#10094;</button>
+        <img class="modal-content" id="lightbox-img" onclick="event.stopPropagation()">
+        <button class="lightbox-nav lightbox-next" onclick="nextImage(event)">&#10095;</button>
+        <div class="modal-caption" id="lightbox-caption"></div>
+    </div>
+
+    <script>
+        // Gallery of evidence images
+        const gallery = [
+            { src: 'image.png', caption: '1. Contexto Industrial: Enunciado del Problema Industrial y Matriz Experimental 4x4' },
+            { src: 'WhatsApp Image 2026-06-12 at 12.16.57 AM.jpeg', caption: '2. Minitab: Análisis de Varianza (ANOVA)' },
+            { src: 'WhatsApp Image 2026-06-12 at 12.16.58 AM (2).jpeg', caption: '3. Excel: Tabla ANOVA con F calculado y valor crítico Ft' },
+            { src: 'WhatsApp Image 2026-06-12 at 12.16.57 AM (3).jpeg', caption: '4. R Project: Tabla ANOVA con símbolos de significancia (*) y (**)' },
+            { src: 'WhatsApp Image 2026-06-12 at 12.16.58 AM (1).jpeg', caption: '5. Python: Tabla ANOVA (statsmodels) e interpretación de rechazo de H₀' },
+            { src: 'WhatsApp Image 2026-06-12 at 12.16.58 AM.jpeg', caption: '6. R Project: Prueba de Tukey de comparaciones de pares' },
+            { src: 'WhatsApp Image 2026-06-12 at 12.16.57 AM (1).jpeg', caption: '7. Minitab: Intervalos de confianza del 95% de Tukey para Proveedores' },
+            { src: 'WhatsApp Image 2026-06-12 at 12.16.57 AM (2).jpeg', caption: '8. Minitab: Intervalos de confianza del 95% de Tukey para Inspectores' }
+        ];
+        let currentGalleryIndex = 0;
+
+        // Tab switching logic for software cards
+        function switchTab(button, tabId) {
+            const card = button.closest('.software-card');
+ 
+            // Remove active class from all tab buttons in this card
+            card.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            button.classList.add('active');
+ 
+            // Hide all tab panes in this card
+            card.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            // Show target tab pane
+            card.querySelector(`#${tabId}`).classList.add('active');
+        }
+ 
+        // Tukey plot selector logic
+        function switchTukeyPlot(factor) {
+            const btns = document.querySelectorAll('.tukey-sel-btn');
+            btns.forEach(btn => btn.classList.remove('active'));
+ 
+            // Activate button
+            const activeBtn = Array.from(btns).find(btn => btn.textContent.toLowerCase().includes(factor.substring(0, 5)));
+            if (activeBtn) activeBtn.classList.add('active');
+ 
+            // Toggle SVG plots
+            if (factor === 'proveedores') {
+                document.getElementById('svg-proveedores').style.display = 'block';
+                document.getElementById('svg-inspectores').style.display = 'none';
+                document.getElementById('tukey-evidence-proveedores').style.display = 'block';
+                document.getElementById('tukey-evidence-inspectores').style.display = 'none';
+            } else {
+                document.getElementById('svg-proveedores').style.display = 'none';
+                document.getElementById('svg-inspectores').style.display = 'block';
+                document.getElementById('tukey-evidence-proveedores').style.display = 'none';
+                document.getElementById('tukey-evidence-inspectores').style.display = 'block';
+            }
+            
+            // Clear Tukey details
+            resetTukeyDetails();
+        }
+
+        // Tukey Details Interactive updates
+        const svgItems = document.querySelectorAll('.svg-item');
+        const tukeyPlaceholder = document.getElementById('tukey-placeholder');
+        const tukeyDetailContent = document.getElementById('tukey-detail-content');
+        const detailComp = document.getElementById('detail-comp');
+        const detailBadge = document.getElementById('detail-badge');
+        const detailMean = document.getElementById('detail-mean');
+        const detailHsd = document.getElementById('detail-hsd');
+        const detailCi = document.getElementById('detail-ci');
+        const detailConclusion = document.getElementById('detail-conclusion');
+
+        function resetTukeyDetails() {
+            tukeyPlaceholder.style.display = 'block';
+            tukeyDetailContent.classList.remove('active');
+        }
+
+        function updateTukeyDetail(item) {
+            const comp = item.getAttribute('data-comp');
+            const mean = item.getAttribute('data-mean');
+            const lwr = item.getAttribute('data-lwr');
+            const upr = item.getAttribute('data-upr');
+            const sig = item.getAttribute('data-sig') === 'true';
+            const hsd = item.getAttribute('data-hsd');
+
+            tukeyPlaceholder.style.display = 'none';
+            tukeyDetailContent.classList.add('active');
+
+            detailComp.textContent = comp;
+            detailMean.textContent = `${mean} g`;
+            detailHsd.textContent = hsd;
+            detailCi.textContent = `[${lwr}, ${upr}]`;
+
+            if (sig) {
+                detailBadge.textContent = 'Diferente';
+                detailBadge.className = 'badge badge-sig';
+                detailConclusion.textContent = 'Diferencia significativa (el intervalo no incluye 0)';
+                detailConclusion.style.color = 'var(--success)';
+            } else {
+                detailBadge.textContent = 'Igual';
+                detailBadge.className = 'badge badge-ns';
+                detailConclusion.textContent = 'No hay diferencia significativa (el intervalo incluye 0)';
+                detailConclusion.style.color = 'var(--text-secondary)';
+            }
+        }
+
+        svgItems.forEach(item => {
+            item.addEventListener('mouseenter', () => updateTukeyDetail(item));
+            item.addEventListener('click', () => updateTukeyDetail(item));
+        });
+ 
+        // Interactive experimental matrix calculator with full Row, Col, and Treatment highlights
+        const cells = document.querySelectorAll('.latin-square td');
+        const tableHeaders = document.querySelectorAll('.latin-square th');
+        const calcRow = document.getElementById('calc-row');
+        const calcCol = document.getElementById('calc-col');
+        const calcTrt = document.getElementById('calc-trt');
+        const calcVal = document.getElementById('calc-val');
+ 
+        // Means references
+        const rowMeans = { 'I': '12.50 g', 'II': '12.75 g', 'III': '14.00 g', 'IV': '13.75 g' };
+        const colMeans = { '1': '15.00 g', '2': '11.50 g', '3': '13.75 g', '4': '12.75 g' };
+        const trtMeans = { 'A': '15.25 g', 'B': '13.00 g', 'C': '11.00 g', 'D': '13.75 g' };
+
+        function highlightMatrixCell(cell) {
+            // Clear all active classes
+            cells.forEach(c => {
+                c.classList.remove('highlight-active');
+                c.classList.remove('row-active');
+                c.classList.remove('col-active');
+                c.classList.remove('trt-active');
+            });
+            tableHeaders.forEach(th => th.classList.remove('header-active'));
+
+            const r = cell.getAttribute('data-row');
+            const c = cell.getAttribute('data-col');
+            const t = cell.getAttribute('data-trt');
+            const v = cell.getAttribute('data-val');
+
+            // Highlight exact cell
+            cell.classList.add('highlight-active');
+
+            // Highlight Row and Column cells
+            cells.forEach(cCell => {
+                if (cCell.getAttribute('data-row') === r) {
+                    cCell.classList.add('row-active');
+                }
+                if (cCell.getAttribute('data-col') === c) {
+                    cCell.classList.add('col-active');
+                }
+                if (cCell.getAttribute('data-trt') === t) {
+                    cCell.classList.add('trt-active');
+                }
+            });
+
+            // Highlight Row and Column Headers
+            tableHeaders.forEach(th => {
+                if (th.textContent.includes(`Inspector ${r}`) || th.textContent.includes(`Escala ${c}`)) {
+                    th.classList.add('header-active');
+                }
+            });
+
+            calcRow.innerHTML = `${r} (Prom: ${rowMeans[r]})`;
+            calcCol.innerHTML = `${c} (Prom: ${colMeans[c]})`;
+            calcTrt.innerHTML = `${t} (Prom: ${trtMeans[t]})`;
+            calcVal.innerHTML = `${v} g`;
+        }
+
+        cells.forEach(cell => {
+            cell.addEventListener('mouseover', () => highlightMatrixCell(cell));
+            cell.addEventListener('click', () => highlightMatrixCell(cell));
+        });
+
+        // Clear matrix highlights when mouse leaves the table
+        document.querySelector('.latin-square').addEventListener('mouseleave', () => {
+            cells.forEach(c => {
+                c.classList.remove('highlight-active');
+                c.classList.remove('row-active');
+                c.classList.remove('col-active');
+                c.classList.remove('trt-active');
+            });
+            tableHeaders.forEach(th => th.classList.remove('header-active'));
+        });
+ 
+        // Lightbox modal logic
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxCaption = document.getElementById('lightbox-caption');
+ 
+        function openLightbox(src, caption) {
+            lightbox.classList.add('active');
+            lightboxImg.src = src;
+            lightboxCaption.innerHTML = caption;
+            document.body.style.overflow = 'hidden'; // Disable page scrolling
+            
+            // Find index in gallery
+            // Strip relative path details just in case
+            const baseSrc = src.split('/').pop();
+            const idx = gallery.findIndex(item => item.src === baseSrc || item.src.endsWith(baseSrc));
+            if (idx !== -1) {
+                currentGalleryIndex = idx;
+            }
+        }
+ 
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = 'auto'; // Enable page scrolling
+        }
+
+        function prevImage(event) {
+            if (event) event.stopPropagation();
+            currentGalleryIndex = (currentGalleryIndex - 1 + gallery.length) % gallery.length;
+            updateLightboxContent();
+        }
+
+        function nextImage(event) {
+            if (event) event.stopPropagation();
+            currentGalleryIndex = (currentGalleryIndex + 1) % gallery.length;
+            updateLightboxContent();
+        }
+
+        function updateLightboxContent() {
+            const item = gallery[currentGalleryIndex];
+            lightboxImg.src = item.src;
+            lightboxCaption.innerHTML = item.caption;
+        }
+ 
+        // Handle keyboard navigation (Escape, Left, Right)
+        document.addEventListener('keydown', function (event) {
+            if (!lightbox.classList.contains('active')) return;
+            
+            if (event.key === "Escape") {
+                closeLightbox();
+            } else if (event.key === "ArrowLeft") {
+                prevImage();
+            } else if (event.key === "ArrowRight") {
+                nextImage();
+            }
+        });
+    </script>
+</body>
+
+</html>
